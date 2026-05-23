@@ -16,6 +16,7 @@ This is a modernized and maintained fork of the original `github.com/mikkyang/id
   * Added missing null-terminators in `IdFrame` (`UFID`) byte formatting.
   * Stripped trailing padding null-bytes from ID3v1 string parses.
 * **Thorough Test Suite**: Added a comprehensive unit and integration testing suite covering edge cases, corrupted/truncated headers, specific frames, and encoding fallbacks.
+* **CLI Test Utility (`id3lister`)**: Added a convenient command-line tool `id3lister` to display all tag information (including properly decoded ID3v1 tag values according to the currently active locale).
 
 Supported formats:
 
@@ -96,3 +97,15 @@ version.
     text := "Hello"
     textFrame := NewTextFrame(ft, text)
     mp3File.AddFrames(textFrame)
+
+# CLI Utility
+
+We include a test utility called `id3lister` to inspect metadata of any audio file from the terminal.
+
+## Installation
+
+    go install github.com/unxed/id3-go/cmd/id3lister@latest
+
+## Usage
+
+    id3lister <path_to_audio_file.mp3>
