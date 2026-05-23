@@ -387,7 +387,7 @@ func (f DescTextFrame) Bytes() []byte {
 		return bytes
 	}
 
-	if err = wr.WriteString(f.description, f.encoding); err != nil {
+	if err = wr.WriteNullTermString(f.description, f.encoding); err != nil {
 		return bytes
 	}
 

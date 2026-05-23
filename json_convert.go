@@ -68,12 +68,13 @@ func ConvertToJSON(mp3Path, jsonPath string) error {
 			}
 
 			switch dtf := frame.(type) {
-			case *v2.DescTextFrame:
-				f.Type = "desc_text"
-				f.Description = dtf.Description()
 			case *v2.UnsynchTextFrame:
 				f.Type = "unsynch_text"
 				f.Language = dtf.Language()
+				f.Description = dtf.Description()
+			case *v2.DescTextFrame:
+				f.Type = "desc_text"
+				f.Description = dtf.Description()
 			case *v2.IdFrame:
 				f.Type = "id"
 				f.Description = dtf.OwnerIdentifier()
