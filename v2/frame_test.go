@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -75,5 +76,22 @@ func TestImageFrame_Success(t *testing.T) {
 	imgBytes := img.Bytes()
 	if len(imgBytes) == 0 {
 		t.Error("expected non-empty byte slice")
+	}
+}
+func TestParseV23Frame_Unknown(t *testing.T) {
+	// Let's pass a header with unknown ID "ZZZZ"
+	headerData := []byte("ZZZZ\x00\x00\x00\x00\x00\x00")
+	framer := ParseV23Frame(bytes.NewReader(headerData), false)
+	if framer != nil {
+		t.Error("expected ParseV23Frame to return nil for unknown frame ID")
+	}
+}
+
+func TestParseV22Frame_Unknown(t *testing.T) {
+	// V2.2 frame header size is 6. Let's pass "ZZZ"
+	headerData := []byte("ZZZ\x00\x00\x00")
+	framer := ParseV22Frame(bytes.NewReader(headerData), false)
+	if framer != nil {
+		t.Error("expected ParseV22Frame to return nil for unknown frame ID")
 	}
 }

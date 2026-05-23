@@ -132,11 +132,21 @@ func (t Tag) Bytes() []byte {
 	data := make([]byte, TagSize)
 
 	copy(data[:3], []byte("TAG"))
-	copy(data[3:33], []byte(t.title))
-	copy(data[33:63], []byte(t.artist))
-	copy(data[63:93], []byte(t.album))
-	copy(data[93:97], []byte(t.year))
-	copy(data[97:127], []byte(t.comment))
+
+	encodeStr := func(dst []byte, s string) {
+		encoded, err := localecp.ANSIEncoder.Bytes([]byte(s))
+		if err != nil {
+			copy(dst, []byte(s))
+		} else {
+			copy(dst, encoded)
+		}
+	}
+
+	encodeStr(data[3:33], t.title)
+	encodeStr(data[33:63], t.artist)
+	encodeStr(data[63:93], t.album)
+	encodeStr(data[93:97], t.year)
+	encodeStr(data[97:127], t.comment)
 	data[127] = t.genre
 
 	return data
