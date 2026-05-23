@@ -17,6 +17,7 @@ This is a modernized and maintained fork of the original `github.com/mikkyang/id
   * Stripped trailing padding null-bytes from ID3v1 string parses.
 * **Thorough Test Suite**: Added a comprehensive unit and integration testing suite covering edge cases, corrupted/truncated headers, specific frames, and encoding fallbacks.
 * **CLI Test Utility (`id3lister`)**: Added a convenient command-line tool `id3lister` to display all tag information (including properly decoded ID3v1 tag values according to the currently active locale).
+* **JSON Converter Utility (`id3json`)**: Implemented a bidirectional command-line tool `id3json` to export audio tag metadata to structured JSON and apply it back into files.
 
 Supported formats:
 
@@ -98,14 +99,34 @@ version.
     textFrame := NewTextFrame(ft, text)
     mp3File.AddFrames(textFrame)
 
-# CLI Utility
+# CLI Utilities
 
-We include a test utility called `id3lister` to inspect metadata of any audio file from the terminal.
+We include CLI utilities to inspect or modify audio files metadata directly from your terminal.
 
-## Installation
+## ID3 Lister (`id3lister`)
+
+Inspects and outputs all core metadata (Title, Artist, Album, etc.) from an audio file.
+
+### Installation
 
     go install github.com/unxed/id3-go/cmd/id3lister@latest
 
-## Usage
+### Usage
 
     id3lister <path_to_audio_file.mp3>
+
+## JSON Converter (`id3json`)
+
+Allows you to export metadata to a structured JSON file, or apply metadata from a JSON file back into an audio file.
+
+### Installation
+
+    go install github.com/unxed/id3-go/cmd/id3json@latest
+
+### Export to JSON
+
+    id3json tojson <path_to_audio_file.mp3> <output.json>
+
+### Import from JSON
+
+    id3json toid3 <input.json> <path_to_audio_file.mp3>

@@ -116,6 +116,10 @@ func (t *Tag) SetYear(text string) {
 	t.year = text
 	t.dirty = true
 }
+func (t *Tag) SetComment(text string) {
+	t.comment = text
+	t.dirty = true
+}
 
 func (t *Tag) SetGenre(text string) {
 	t.genre = 255
