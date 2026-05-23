@@ -33,7 +33,7 @@ func TestParseTag_RoundTrip(t *testing.T) {
 
 		resultTag := ParseTag(f)
 		if tag != *resultTag {
-			t.Errorf("test %d: expected %q, got %q", testNum, tag, *resultTag)
+			t.Errorf("test %d: expected %+v, got %+v", testNum, tag, *resultTag)
 		}
 	}
 }

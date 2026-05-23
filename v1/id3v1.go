@@ -4,6 +4,7 @@
 package v1
 
 import (
+	"github.com/unxed/localecp"
 	v2 "github.com/unxed/id3-go/v2"
 	"io"
 	"os"
@@ -56,12 +57,20 @@ func ParseTag(readSeeker io.ReadSeeker) *Tag {
 	}
 
 	cutset := string(rune(0))
+	decodeStr := func(b []byte) string {
+		decoded, err := localecp.ANSIDecoder.Bytes(b)
+		if err != nil {
+			return strings.TrimRight(string(b), cutset)
+		}
+		return strings.TrimRight(string(decoded), cutset)
+	}
+
 	return &Tag{
-		title:   strings.TrimRight(string(data[3:33]), cutset),
-		artist:  strings.TrimRight(string(data[33:63]), cutset),
-		album:   strings.TrimRight(string(data[63:93]), cutset),
-		year:    strings.TrimRight(string(data[93:97]), cutset),
-		comment: strings.TrimRight(string(data[97:127]), cutset),
+		title:   decodeStr(data[3:33]),
+		artist:  decodeStr(data[33:63]),
+		album:   decodeStr(data[63:93]),
+		year:    decodeStr(data[93:97]),
+		comment: decodeStr(data[97:127]),
 		genre:   data[127],
 		dirty:   false,
 	}

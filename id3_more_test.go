@@ -7,8 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/unxed/localecp"
 	v1 "github.com/unxed/id3-go/v1"
 	v2 "github.com/unxed/id3-go/v2"
+	"golang.org/x/text/encoding/charmap"
 )
 
 func TestV1_Detailed(t *testing.T) {
@@ -407,5 +409,45 @@ func TestClose_UnknownVersion(t *testing.T) {
 		t.Error("expected error for unknown tag version")
 	} else if err.Error() != "Close: unknown tag version" {
 		t.Errorf("expected 'Close: unknown tag version', got %q", err.Error())
+	}
+}
+
+func TestV1_LocaleDecoding(t *testing.T) {
+	// Backup original decoder
+	origDecoder := localecp.ANSIDecoder
+	defer func() {
+		localecp.ANSIDecoder = origDecoder
+	}()
+
+	// Set specifically to Windows-1251 for non-ASCII tests
+	localecp.ANSIDecoder = charmap.Windows1251.NewDecoder()
+
+	tempFile, err := ioutil.TempFile("", "v1_locale")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tempFile.Name())
+	defer tempFile.Close()
+
+	// Write 128 bytes of ID3v1 tag directly
+	tagData := make([]byte, 128)
+	copy(tagData[:3], "TAG")
+	// "Привет" in CP1251: 0xcf, 0xf0, 0xe8, 0xe2, 0xe5, 0xf2
+	copy(tagData[3:3+6], []byte{0xcf, 0xf0, 0xe8, 0xe2, 0xe5, 0xf2})
+
+	if _, err := tempFile.Write(tagData); err != nil {
+		t.Fatal(err)
+	}
+
+	// Open with id3-go
+	f, err := Open(tempFile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	title := strings.TrimRight(f.Title(), "\x00")
+	if title != "Привет" {
+		t.Errorf("expected 'Привет' after legacy decoding, got %q", title)
 	}
 }
