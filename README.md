@@ -1,14 +1,27 @@
-# id3
+# id3-go (Fork)
 
 [![build status](https://travis-ci.org/unxed/id3-go.svg)](https://travis-ci.org/unxed/id3-go)
 
 ID3 library for Go.
 
+This is a modernized and maintained fork of the original `github.com/mikkyang/id3-go` library, which seems to be no longer developed.
+
+## Key Improvements in this Fork
+
+* **Locale-Aware ID3v1 Support**: Integrated with `github.com/unxed/localecp` to dynamically deduce the host system's legacy ANSI codepage (such as CP1251 on Cyrillic systems, CP932 on Japanese systems). This ensures that legacy ID3v1 tags are decoded and encoded correctly, matching the behavior of classic desktop media players.
+* **Deterministic Tag Serialization**: Refactored internal frame storage to preserve the exact insertion order. Frame sequences remain stable and deterministic when writing tags back to disk, rather than being serialized in random map order.
+* **ID3v2 Desynchronization**: Added desynchronization decoding for ID3v2.2 and ID3v2.3 frame contents to safely handle streams where synchsafe integrity is enforced.
+* **Critical Bug Fixes**:
+  * Corrected file boundary calculations in the `shiftBytesBack` utility to prevent stream corruption when enlarging tags.
+  * Added missing null-terminators in `IdFrame` (`UFID`) byte formatting.
+  * Stripped trailing padding null-bytes from ID3v1 string parses.
+* **Thorough Test Suite**: Added a comprehensive unit and integration testing suite covering edge cases, corrupted/truncated headers, specific frames, and encoding fallbacks.
+
 Supported formats:
 
-* ID3v1
-* ID3v2.2
-* ID3v2.3
+* ID3v1 (with locale-aware ANSI codepage detection)
+* ID3v2.2 (with desynchronization support)
+* ID3v2.3 (with desynchronization support)
 
 # Install
 
