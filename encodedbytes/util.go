@@ -97,7 +97,7 @@ func IntBytes(n uint32, base uint) []byte {
 	mask := uint32(1<<base - 1)
 	bytes := make([]byte, BytesPerInt)
 
-	for i, _ := range bytes {
+	for i := range bytes {
 		bytes[len(bytes)-i-1] = byte(n & mask)
 		n >>= base
 	}
@@ -146,7 +146,7 @@ func nullIndex(data []byte, encoding byte) (atIndex, afterIndex int) {
 	limit := len(data)
 	null := bytes.Repeat([]byte{0x0}, byteCount)
 
-	for i, _ := range data[:limit/byteCount] {
+	for i := range data[:limit/byteCount] {
 		atIndex = byteCount * i
 		afterIndex = atIndex + byteCount
 

@@ -4,8 +4,8 @@
 package v1
 
 import (
-	"github.com/unxed/localecp"
 	v2 "github.com/unxed/id3-go/v2"
+	"github.com/unxed/localecp"
 	"io"
 	"os"
 	"strings"

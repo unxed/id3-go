@@ -1,16 +1,16 @@
 package id3
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/unxed/localecp"
 	v1 "github.com/unxed/id3-go/v1"
 	v2 "github.com/unxed/id3-go/v2"
+	"github.com/unxed/localecp"
 	"golang.org/x/text/encoding/charmap"
 )
 
