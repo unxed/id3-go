@@ -271,15 +271,34 @@ func (t Tag) textFrameText(ft FrameType) string {
 	return ""
 }
 
-func (t *Tag) setTextFrameText(ft FrameType, text string) {
-	if frame := t.textFrame(ft); frame != nil {
-		frame.SetEncoding("UTF-8")
-		frame.SetText(text)
-	} else {
-		f := NewTextFrame(ft, text)
-		f.SetEncoding("UTF-8")
-		t.AddFrames(f)
+// textEncoding is the encoding new text goes out in. ID3v2.4 added UTF-8
+// (encoding byte 3); a v2.2/v2.3 tag only has 0 (ISO-8859-1) and 1 (UTF-16
+// with BOM), and writing 3 into one produces a tag other readers need not
+// understand -- which is how the repository's own test.mp3 ended up with
+// UTF-8 frames inside a v2.3 header after one test run.
+func (t *Tag) textEncoding() string {
+	if t.Header != nil && t.Header.version >= 4 {
+		return "UTF-8"
 	}
+	return "UTF-16"
+}
+
+func (t *Tag) setTextFrameText(ft FrameType, text string) {
+	enc := t.textEncoding()
+	frame := t.textFrame(ft)
+	if frame == nil {
+		// Empty, then the encoding, then the text. SetEncoding re-encodes
+		// whatever text the frame holds in its *current* encoding to size
+		// the change, and a fresh frame starts as ISO-8859-1: creating it
+		// with non-Latin-1 text and switching afterwards made that
+		// re-encoding fail, the error went unread, and the frame stayed
+		// ISO-8859-1 with text it cannot hold.
+		f := NewTextFrame(ft, "")
+		t.AddFrames(f)
+		frame = f
+	}
+	frame.SetEncoding(enc)
+	frame.SetText(text)
 }
 
 func ParseHeader(reader io.Reader) *Header {
