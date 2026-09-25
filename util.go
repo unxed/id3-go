@@ -18,7 +18,7 @@ func shiftBytesBack(file *os.File, start, offset int64) error {
 	wrBuf := make([]byte, offset)
 	rdBuf := make([]byte, offset)
 
-	wrOffset := offset
+	wrOffset := start + offset
 	rdOffset := start
 
 	rn, err := file.ReadAt(wrBuf, rdOffset)
