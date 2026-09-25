@@ -9,18 +9,36 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
-const (
-	testFile = "test.mp3"
-)
+// fixtureFile is the checked-in sample. Tests that write take a copy
+// (testFixture), so a failed or interrupted run cannot modify it.
+const fixtureFile = "test.mp3"
+
+// testFixture copies the sample into a per-test temporary directory and
+// returns the copy's path, so a test can open it read-write, save, and
+// compare without touching the file under version control.
+func testFixture(t *testing.T) string {
+	t.Helper()
+	data, err := os.ReadFile(fixtureFile)
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	path := filepath.Join(t.TempDir(), fixtureFile)
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		t.Fatalf("copy fixture: %v", err)
+	}
+	return path
+}
 
 func TestParse(t *testing.T) {
-	file, err := os.OpenFile("test.mp3", os.O_RDWR, 0666)
+	file, err := os.OpenFile(testFixture(t), os.O_RDWR, 0666)
 	if err != nil {
-		t.Errorf("Parse: unable to open file")
+		t.Fatalf("Parse: unable to open file")
 	}
+	defer file.Close()
 
 	tagger, err := Parse(file)
 	if err != nil {
@@ -65,10 +83,12 @@ func TestParse(t *testing.T) {
 }
 
 func TestOpen(t *testing.T) {
+	testFile := testFixture(t)
 	file, err := Open(testFile)
 	if err != nil {
-		t.Errorf("Open: unable to open file")
+		t.Fatalf("Open: unable to open file")
 	}
+	defer file.Close()
 
 	tag, ok := file.Tagger.(*v2.Tag)
 	if !ok {
@@ -107,6 +127,7 @@ func TestOpen(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
+	testFile := testFixture(t)
 	before, err := ioutil.ReadFile(testFile)
 	if err != nil {
 		t.Errorf("test file error")
@@ -142,6 +163,7 @@ func TestClose(t *testing.T) {
 }
 
 func TestReadonly(t *testing.T) {
+	testFile := testFixture(t)
 	before, err := ioutil.ReadFile(testFile)
 	if err != nil {
 		t.Errorf("test file error")
@@ -256,6 +278,7 @@ func TestUnsynchTextFrame_RoundTrip(t *testing.T) {
 }
 
 func TestUTF16CommPanic(t *testing.T) {
+	testFile := testFixture(t)
 	osFile, err := os.Open(testFile)
 	if err != nil {
 		t.Error(err)
