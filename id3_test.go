@@ -38,8 +38,9 @@ func testFixture(t *testing.T) string {
 func TestParse(t *testing.T) {
 	file, err := os.OpenFile(testFixture(t), os.O_RDWR, 0666)
 	if err != nil {
-		t.Errorf("Parse: unable to open file")
+		t.Fatalf("Parse: unable to open file")
 	}
+	defer file.Close()
 
 	tagger, err := Parse(file)
 	if err != nil {
@@ -87,8 +88,9 @@ func TestOpen(t *testing.T) {
 	testFile := testFixture(t)
 	file, err := Open(testFile)
 	if err != nil {
-		t.Errorf("Open: unable to open file")
+		t.Fatalf("Open: unable to open file")
 	}
+	defer file.Close()
 
 	tag, ok := file.Tagger.(*v2.Tag)
 	if !ok {
