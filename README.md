@@ -55,6 +55,18 @@ methods are for `Title`, `Artist`, `Album`, `Year`, `Genre`, and `Comments`.
     mp3File.SetArtist("Okasian")
     fmt.Println(mp3File.Artist())
 
+## ID3v1 Text Encoding
+
+ID3v1 does not specify a character set, and taggers usually wrote the legacy
+code page of the system they ran on. By default the fields are returned as the
+raw stored bytes. To decode and encode them in a specific code page, set
+`v1.Encoding`, or call `v1.UseLocaleEncoding()` to use the ANSI code page of
+the current system locale:
+
+    v1.Encoding = charmap.Windows1251 // golang.org/x/text/encoding/charmap
+    // or
+    v1.UseLocaleEncoding()
+
 # ID3v2 Frames
 
 v2 Frames can be accessed directly by using the `Frame` or `Frames` method

@@ -4,9 +4,12 @@
 package v1
 
 import (
-	v2 "github.com/mikkyang/id3-go/v2"
 	"io"
 	"os"
+
+	v2 "github.com/mikkyang/id3-go/v2"
+	"github.com/unxed/localecp"
+	"golang.org/x/text/encoding"
 )
 
 const (
@@ -38,6 +41,48 @@ var (
 	}
 )
 
+// Encoding is the character set used for the text fields of ID3v1 tags.
+// ID3v1 does not define one; in practice taggers wrote the legacy code page
+// of the system they ran on (Windows-1251 in Russia, Windows-1250 in Poland,
+// and so on).
+//
+// When Encoding is nil (the default), fields are returned exactly as stored
+// and strings are written as their UTF-8 bytes, as before. When it is set,
+// fields are decoded from it on parse and encoded to it on write; a string
+// that cannot be encoded is written as UTF-8 bytes.
+//
+// Set it once, before parsing or writing tags; it is not synchronized.
+var Encoding encoding.Encoding
+
+// UseLocaleEncoding sets Encoding to the legacy ANSI code page of the
+// current system locale (for example Windows-1251 for ru_RU), as detected
+// by github.com/unxed/localecp: GetACP on Windows, LC_ALL/LC_CTYPE/LANG
+// elsewhere, Windows-1252 if nothing more specific is found.
+func UseLocaleEncoding() {
+	Encoding = localecp.ANSIEncoding
+}
+
+func decodeField(b []byte) string {
+	if Encoding == nil {
+		return string(b)
+	}
+	decoded, err := Encoding.NewDecoder().Bytes(b)
+	if err != nil {
+		return string(b)
+	}
+	return string(decoded)
+}
+
+func encodeField(dst []byte, s string) {
+	if Encoding != nil {
+		if encoded, err := Encoding.NewEncoder().Bytes([]byte(s)); err == nil {
+			copy(dst, encoded)
+			return
+		}
+	}
+	copy(dst, []byte(s))
+}
+
 // Tag represents an ID3v1 tag
 type Tag struct {
 	title, artist, album, year, comment string
@@ -55,11 +100,11 @@ func ParseTag(readSeeker io.ReadSeeker) *Tag {
 	}
 
 	return &Tag{
-		title:   string(data[3:33]),
-		artist:  string(data[33:63]),
-		album:   string(data[63:93]),
-		year:    string(data[93:97]),
-		comment: string(data[97:127]),
+		title:   decodeField(data[3:33]),
+		artist:  decodeField(data[33:63]),
+		album:   decodeField(data[63:93]),
+		year:    decodeField(data[93:97]),
+		comment: decodeField(data[97:127]),
 		genre:   data[127],
 		dirty:   false,
 	}
@@ -121,11 +166,11 @@ func (t Tag) Bytes() []byte {
 	data := make([]byte, TagSize)
 
 	copy(data[:3], []byte("TAG"))
-	copy(data[3:33], []byte(t.title))
-	copy(data[33:63], []byte(t.artist))
-	copy(data[63:93], []byte(t.album))
-	copy(data[93:97], []byte(t.year))
-	copy(data[97:127], []byte(t.comment))
+	encodeField(data[3:33], t.title)
+	encodeField(data[33:63], t.artist)
+	encodeField(data[63:93], t.album)
+	encodeField(data[93:97], t.year)
+	encodeField(data[97:127], t.comment)
 	data[127] = t.genre
 
 	return data
