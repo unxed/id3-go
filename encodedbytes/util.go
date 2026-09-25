@@ -6,7 +6,11 @@ package encodedbytes
 import (
 	"bytes"
 	"errors"
-	iconv "github.com/djimenez/iconv-go"
+
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
 )
 
 const (
@@ -28,15 +32,40 @@ var (
 		{Name: "UTF-16BE", NullLength: 2},
 		{Name: "UTF-8", NullLength: 1},
 	}
-	Decoders = make([]*iconv.Converter, len(EncodingMap))
-	Encoders = make([]*iconv.Converter, len(EncodingMap))
+	Decoders = make([]StringConverter, len(EncodingMap))
+	Encoders = make([]StringConverter, len(EncodingMap))
 )
 
+// StringConverter converts a string between the native encoding (UTF-8)
+// and one of the encodings in EncodingMap.
+type StringConverter interface {
+	ConvertString(s string) (string, error)
+}
+
+// xtextConverter creates a fresh transformer for every call, so converters
+// keep no state between calls and are safe for concurrent use.
+type xtextConverter struct {
+	newTransformer func() transform.Transformer
+}
+
+func (c xtextConverter) ConvertString(s string) (string, error) {
+	res, _, err := transform.String(c.newTransformer(), s)
+	return res, err
+}
+
 func init() {
-	n := EncodingForIndex(NativeEncoding)
-	for i, e := range EncodingMap {
-		Decoders[i], _ = iconv.NewConverter(e.Name, n)
-		Encoders[i], _ = iconv.NewConverter(n, e.Name)
+	// Same order as EncodingMap.
+	encodings := [len(EncodingMap)]encoding.Encoding{
+		charmap.ISO8859_1,
+		unicode.UTF16(unicode.BigEndian, unicode.UseBOM),
+		unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM),
+		encoding.Nop,
+	}
+
+	for i, e := range encodings {
+		e := e
+		Decoders[i] = xtextConverter{func() transform.Transformer { return e.NewDecoder() }}
+		Encoders[i] = xtextConverter{func() transform.Transformer { return e.NewEncoder() }}
 	}
 }
 
